@@ -4,30 +4,51 @@ function Square({value, onSquareClick}) {
   return <button className="square" onClick={onSquareClick}>{value}</button>;
 }
 
-function Board({xIsNext, squares, onPlay}) {
-  function handleClick(i){
+function Board({squares, onPlay}) {
+  const [xIsNext,setxIsNext] = useState(true);
+
+  async function handleClick(i){
+    setxIsNext(false);
+
     if(squares[i] || calculateWinner(squares)){
       return;
     }
     //immutability
     const nextSquares = squares.slice();
-    if(xIsNext){
-      nextSquares[i] = "X";
-    }else{
-      nextSquares[i] = "O";
-    }
-
+    //if(xIsNext){
+    nextSquares[i] = "X"; // REAL PLAYER
+    //}else{
+      //nextSquares[i] = "O";
+    //}
     onPlay(nextSquares);
 
+    await new Promise(r => setTimeout(r, 500));
 
+    const winner = calculateWinner(nextSquares);
+    if(!winner && nextSquares.includes(null)){
+      const aiMove = getAImove(nextSquares);
+      nextSquares[aiMove] = "O";
+      onPlay(nextSquares);
+    }
+    
+    setxIsNext(true);
   }
 
   const winner = calculateWinner(squares);
   let status;
   if (winner) {
-    status = 'Winner: ' + winner;
+    if(winner === 'X'){
+      status = 'Player wins';
+    }
+    else{
+      status = 'AI wins';
+    }
   } else {
-    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+    if(xIsNext){
+      status = 'Players Move';
+    } else {
+      status = 'AIs Move';
+    }
   }
 
   return (
@@ -52,10 +73,20 @@ function Board({xIsNext, squares, onPlay}) {
   );
 }
 
+function getAImove(squares) {
+  const emptySquares = squares
+    .map((val, index) => (val === null ? index : null))
+    .filter(val => val !== null);
+
+  // Pick a random empty square
+  const randomIndex = Math.floor(Math.random() * emptySquares.length);
+  return emptySquares[randomIndex];
+}
+
 export default function Game(){
   const [history, setHistory] = useState([Array(9).fill(null)]);
   const [currentMove, setCurrentMove] = useState(0);
-  const xIsNext = currentMove % 2 === 0;
+  //const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
 
   function handlePlay(nextSquares){
@@ -83,7 +114,7 @@ export default function Game(){
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext = {xIsNext} squares = {currentSquares} onPlay={handlePlay}/>
+        <Board squares = {currentSquares} onPlay={handlePlay}/>
       </div>
       <div className="game-info">
         <ol> {moves} </ol>
