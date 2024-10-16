@@ -8,7 +8,7 @@ function Board({squares, onPlay}) {
   const [xIsNext,setxIsNext] = useState(true);
 
   async function handleClick(i){
-    if(squares[i] || calculateWinner(squares)){
+    if(squares[i] || calculateWinner(squares) || !xIsNext){
       return;
     }
     
@@ -30,8 +30,8 @@ function Board({squares, onPlay}) {
       const aiMove = getAImove(nextSquares);
       nextSquares[aiMove] = "O";
       onPlay(nextSquares);
-      setxIsNext(true);
     }
+    setxIsNext(true);
   }
 
   const winner = calculateWinner(squares);
@@ -112,6 +112,7 @@ function getAImove(squares) {
       return 0;
     }
   } else if(emptySquares.length === 6) {
+    //handle edge cases
     if(squares[4] === 'X' && squares[8] === 'X'){
       return 2;
     } else if(squares[0] === 'X' && squares[8] === 'X') {
@@ -119,7 +120,17 @@ function getAImove(squares) {
     } else if(squares[2] === 'X' && squares[6] === 'X'){
       return 3;
     }
-  }
+    //edge around center case
+    else if(squares[1] === 'X' && squares[3] === 'X'){
+      return 0;
+    } else if(squares[1] === 'X' && squares[5] === 'X') {
+      return 8;
+    } else if(squares[5] === 'X' && squares[7] === 'X'){
+      return 2;
+    } else if(squares[7] === 'X' && squares[3] === 'X'){
+      return 6;
+    }
+  } 
   
   const findWin = two_in_a_row(squares, 'O');
   if (findWin !== null) {
