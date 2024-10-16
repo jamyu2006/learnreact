@@ -8,11 +8,12 @@ function Board({squares, onPlay}) {
   const [xIsNext,setxIsNext] = useState(true);
 
   async function handleClick(i){
-    setxIsNext(false);
-
     if(squares[i] || calculateWinner(squares)){
       return;
     }
+    
+    setxIsNext(false);
+
     //immutability
     const nextSquares = squares.slice();
     //if(xIsNext){
@@ -29,14 +30,16 @@ function Board({squares, onPlay}) {
       const aiMove = getAImove(nextSquares);
       nextSquares[aiMove] = "O";
       onPlay(nextSquares);
+      setxIsNext(true);
     }
-    
-    setxIsNext(true);
   }
 
   const winner = calculateWinner(squares);
   let status;
-  if (winner) {
+  if(!squares.slice().includes(null)){
+    status = 'tie';
+  }
+  else if (winner) {
     if(winner === 'X'){
       status = 'Player wins';
     }
@@ -73,12 +76,61 @@ function Board({squares, onPlay}) {
   );
 }
 
+function two_in_a_row(squares, symbol) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] === symbol && squares[b] === symbol && squares[c] === null) {
+      return c;
+    } else if(squares[a] === symbol && squares[b] === null && squares[c] === symbol){
+      return b;
+    } else if(squares[a] === null && squares[b] === symbol && squares[c] === symbol){
+      return a;
+    }
+  }
+  return null;
+}
+
 function getAImove(squares) {
   const emptySquares = squares
     .map((val, index) => (val === null ? index : null))
     .filter(val => val !== null);
 
-  // Pick a random empty square
+  if(emptySquares.length === 8){
+    if(emptySquares.includes(4)){
+      return 4;
+    } else {
+      return 0;
+    }
+  } else if(emptySquares.length === 6) {
+    if(squares[4] === 'X' && squares[8] === 'X'){
+      return 2;
+    } else if(squares[0] === 'X' && squares[8] === 'X') {
+      return 1;
+    } else if(squares[2] === 'X' && squares[6] === 'X'){
+      return 3;
+    }
+  }
+  
+  const findWin = two_in_a_row(squares, 'O');
+  if (findWin !== null) {
+    return findWin; // Return the win if there's one
+  }
+
+  const blockMove = two_in_a_row(squares, 'X');
+  if (blockMove !== null) {
+    return blockMove; // Return the block move if there's one
+  }
+
   const randomIndex = Math.floor(Math.random() * emptySquares.length);
   return emptySquares[randomIndex];
 }
